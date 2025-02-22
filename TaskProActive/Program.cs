@@ -6,6 +6,7 @@ using TaskProActive.Repositories;
 using TaskProActive.Data;
 using TaskProActive.Services;
 using Microsoft.OpenApi.Models;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,11 +20,23 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalDev",
+        policy => policy
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -53,7 +66,10 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+});
 var issuer = builder.Configuration["Jwt:Issuer"] ?? "TaskProIssuer";
 var audience = builder.Configuration["Jwt:Audience"] ?? "TaskProAudience";
 var secretKey = builder.Configuration["Jwt:SecretKey"] ?? "mysupersecretkey_1234567890123456";
@@ -86,6 +102,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowLocalDev");
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

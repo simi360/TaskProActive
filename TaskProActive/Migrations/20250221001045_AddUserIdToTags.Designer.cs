@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskProActive.Data;
 
@@ -11,9 +12,11 @@ using TaskProActive.Data;
 namespace TaskProActive.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250221001045_AddUserIdToTags")]
+    partial class AddUserIdToTags
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -49,6 +52,9 @@ namespace TaskProActive.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("UserId1")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedBy");
@@ -56,6 +62,8 @@ namespace TaskProActive.Migrations
                     b.HasIndex("ModifiedBy");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
 
                     b.ToTable("Tags");
                 });
@@ -179,17 +187,19 @@ namespace TaskProActive.Migrations
                         .HasForeignKey("ModifiedBy")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("TaskProActive.Models.User", "Owner")
-                        .WithMany("Tags")
+                    b.HasOne("TaskProActive.Models.User", null)
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("TaskProActive.Models.User", null)
+                        .WithMany("Tags")
+                        .HasForeignKey("UserId1");
+
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("ModifiedByUser");
-
-                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("TaskProActive.Models.TaskItem", b =>

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskProActive.Data;
 
@@ -11,9 +12,11 @@ using TaskProActive.Data;
 namespace TaskProActive.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250220224245_AddAuditPriorityAndTagEnhancements")]
+    partial class AddAuditPriorityAndTagEnhancements
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -46,16 +49,11 @@ namespace TaskProActive.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("ModifiedBy");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Tags");
                 });
@@ -179,17 +177,9 @@ namespace TaskProActive.Migrations
                         .HasForeignKey("ModifiedBy")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("TaskProActive.Models.User", "Owner")
-                        .WithMany("Tags")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("ModifiedByUser");
-
-                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("TaskProActive.Models.TaskItem", b =>
@@ -263,8 +253,6 @@ namespace TaskProActive.Migrations
 
             modelBuilder.Entity("TaskProActive.Models.User", b =>
                 {
-                    b.Navigation("Tags");
-
                     b.Navigation("Tasks");
                 });
 #pragma warning restore 612, 618

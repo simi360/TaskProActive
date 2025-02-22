@@ -5,6 +5,7 @@ using TaskProActive.Data;
 using TaskProActive.Models;
 using TaskProActive.Repositories;
 using TaskProActive.DTO;
+using System.Security.Claims;
 
 namespace TaskProActive.Services
 {
@@ -30,8 +31,16 @@ namespace TaskProActive.Services
             // Hash the password
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
-            var user = new User { Username = request.Username, PasswordHash = passwordHash, Name = request.Name };
+            var user = new User 
+            { 
+                Username = request.Username, 
+                PasswordHash = passwordHash, 
+                Name = request.Name,
+            };
             await _userRepository.AddUserAsync(user);
+            await _context.SaveChangesAsync();
+
+            user.CreatedBy = user.Id;
             await _context.SaveChangesAsync();
             return true;
         }
@@ -44,7 +53,6 @@ namespace TaskProActive.Services
                 return null;
             }
 
-            // Generate JWT token using settings from configuration
             var issuer = _configuration["Jwt:Issuer"];
             var audience = _configuration["Jwt:Audience"];
             var secretKey = _configuration["Jwt:SecretKey"];
@@ -52,10 +60,19 @@ namespace TaskProActive.Services
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var token = new JwtSecurityToken(issuer,
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Username)
+            };
+
+            var token = new JwtSecurityToken(
+                issuer,
                 audience,
+                claims,
                 expires: DateTime.Now.AddHours(1),
-                signingCredentials: creds);
+                signingCredentials: creds
+            );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
