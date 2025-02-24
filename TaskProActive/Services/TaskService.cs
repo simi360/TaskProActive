@@ -48,20 +48,16 @@ namespace TaskProActive.Services
                 UserId = currentUserId,
                 CreatedBy = currentUserId,
                 CreatedOn = DateTime.UtcNow,
-                // Tags will be processed below
             };
 
-            // Process tags: the service should handle adding new tags and linking existing tags.
             if (createTaskDto.Tags != null && createTaskDto.Tags.Any())
             {
                 taskModel.TaskTags = await ProcessTagsAsync(taskModel, createTaskDto.Tags, currentUserId);
             }
 
-            // Add the task using repository
             _uow.TaskRepository.Add(taskModel);
             await _uow.CompleteAsync();
 
-            // Return a mapped TaskDto (using your manual mapper)
             return TaskMapper.ToDto(taskModel);
         }
 
@@ -71,20 +67,16 @@ namespace TaskProActive.Services
             if (task == null)
                 return;
 
-            // Update fields
             task.Title = updatedTask.Title;
             task.Description = updatedTask.Description;
             task.Status = updatedTask.Status;
             task.Priority = updatedTask.Priority;
 
-            // Update audit fields
             task.ModifiedOn = DateTime.UtcNow;
             task.ModifiedBy = currentUserId;
 
-            // Process tags if provided: replace existing TaskTags with new ones.
             if (tagDtos != null)
             {
-                // Clear existing tags
                 task.TaskTags.Clear();
                 task.TaskTags = await ProcessTagsAsync(task, tagDtos, currentUserId);
             }
@@ -113,7 +105,6 @@ namespace TaskProActive.Services
                     t.UserId == currentUserId);
                 if (tag == null)
                 {
-                    // Create new tag if not found
                     tag = new Tag
                     {
                         Name = tagDto.Name,
